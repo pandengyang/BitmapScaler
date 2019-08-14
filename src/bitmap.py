@@ -119,11 +119,9 @@ class Bitmap(object):
                     # 每个像素写 ratio 遍
                     for _ in range(ratio):
                         dataList.append(bytesOfPixel)
-                        # self.data += bytesOfPixel
 
                 # 补零
                 dataList.append('\x00' * self.patch)
-                # self.data += '\x00' * self.patch
 
         self.data = ''.join(dataList)
 
@@ -171,7 +169,7 @@ patch: %d'''
             self.biClrUsed, self.biClrImportant, self.patch)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     img = Bitmap('24.bmp')
     img.parse()
     print img
