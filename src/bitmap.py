@@ -57,13 +57,18 @@ class Bitmap(object):
              self.biClrImportant) = struct.unpack('<IIHHIIIIII',
                                                   bmpInfoHeaderBytes)
 
-            dataList = []
+            # 调色板
+            if self.bfOffBits != Bitmap.FILE_HEADER_SIZE + self.biSize:
+                self.palette = f.read(self.bfOffBits - Bitmap.FILE_HEADER_SIZE - self.biSize)
+
+            # 位图数据
+            chunks = []
             data = f.read(1024)
             while data:
-                dataList.append(data)
+                chunks.append(data)
                 data = f.read()
 
-            self.data = ''.join(dataList)
+            self.data = ''.join(chunks)
 
             validBytesPerLine = self.biBitCount / 8 * self.biWidth
             if validBytesPerLine % Bitmap.ALIGN == 0:
@@ -73,6 +78,21 @@ class Bitmap(object):
                 self.patch = Bitmap.ALIGN - validBytesPerLine % Bitmap.ALIGN
 
     def zoomIn(self, ratio):
+        pass
+
+    def zoomIn_1_4(self, ratio):
+        '''
+        单色位图
+        16 色位图
+        '''
+        pass
+
+    def zoomIn_8_24_32(self, ratio):
+        '''
+        256 色位图
+        24 位位图
+        32 位位图
+        '''
         bytesPerPixel = self.biBitCount / 8
 
         oldBytesPerLine = bytesPerPixel * self.biWidth + self.patch
@@ -102,7 +122,7 @@ class Bitmap(object):
                             self.bfSize + self.biSizeImage - oldBiSizeImage,
                             self.bfReserved1, self.bfReserved2, self.bfOffBits)
 
-        dataList = []
+        chunks = []
         # 写每一行
         for hIndex in range(oldBiHeight):
             lineData = oldData[hIndex * oldBytesPerLine:(hIndex + 1) *
@@ -118,12 +138,12 @@ class Bitmap(object):
 
                     # 每个像素写 ratio 遍
                     for _ in range(ratio):
-                        dataList.append(bytesOfPixel)
+                        chunks.append(bytesOfPixel)
 
                 # 补零
-                dataList.append('\x00' * self.patch)
+                chunks.append('\x00' * self.patch)
 
-        self.data = ''.join(dataList)
+        self.data = ''.join(chunks)
 
     def dump(self, pathname):
         bmpFileHeaderBytes = struct.pack('<2sIHHI', self.bfType, self.bfSize,
@@ -139,6 +159,8 @@ class Bitmap(object):
         with open(pathname, 'wb') as f:
             f.write(bmpFileHeaderBytes)
             f.write(bmpInfoHeaderBytes)
+            if self.palette is not None:
+                f.write(self.palette)
             f.write(self.data)
 
     def __str__(self):
@@ -159,20 +181,45 @@ biXPelsPerMeter: %d
 biYPelsPerMeter: %d
 biClrUsed: %d
 biClrImportant: %d
+paletteLen: %d
 patch: %d'''
+
+        if self.palette is not None:
+            paletteLen = len(self.palette)
+
+        else:
+            paletteLen = 0
 
         return bmpStr % (
             self.pathname, self.bfType, self.bfSize, self.bfReserved1,
             self.bfReserved2, self.bfOffBits, self.biSize, self.biWidth,
             self.biHeight, self.biPlanes, self.biBitCount, self.biCompression,
             self.biSizeImage, self.biXPelsPerMeter, self.biYPelsPerMeter,
-            self.biClrUsed, self.biClrImportant, self.patch)
+            self.biClrUsed, self.biClrImportant, paletteLen, self.patch)
 
 
 if __name__ == '__main__':
+    '''
     img = Bitmap('24.bmp')
     img.parse()
     print img
     img.zoomIn(4)
     print img
     img.dump('24_2.bmp')
+    '''
+
+    '''
+    img = Bitmap('256.bmp')
+    img.parse()
+    print img
+    img.zoomIn(2)
+    print img
+    img.dump('256_2.bmp')
+    '''
+
+    img = Bitmap('16.bmp')
+    img.parse()
+    print img
+    img.zoomIn(2)
+    print img
+    img.dump('16_2.bmp')
