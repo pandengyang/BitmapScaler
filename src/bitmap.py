@@ -78,7 +78,15 @@ class Bitmap(object):
                 self.patch = Bitmap.ALIGN - validBytesPerLine % Bitmap.ALIGN
 
     def zoomIn(self, ratio):
-        pass
+        if self.biBitCount == 8 \
+            or self.biBitCount == 24 \
+            or self.biBitCount == 32:
+            self.zoomIn_8_24_32(ratio)
+
+            return (True, '')
+
+        else:
+            return (False, 'biBitCount is %d, not supported' % self.biBitCount)
 
     def zoomIn_1_4(self, ratio):
         '''
@@ -109,7 +117,7 @@ class Bitmap(object):
             self.patch = Bitmap.ALIGN - validBytesPerLine % Bitmap.ALIGN
 
         (self.biSize, self.biWidth, self.biHeight, self.biPlanes,
-         self.biBitCount, self.bitCompression, self.biSizeImage,
+         self.biBitCount, self.biCompression, self.biSizeImage,
          self.biXPelsPerMeter, self.biYPelsPerMeter, self.biClrUsed,
          self.biClrImportant) = (
              self.biSize, self.biWidth * ratio, self.biHeight * ratio,
@@ -152,7 +160,7 @@ class Bitmap(object):
 
         bmpInfoHeaderBytes = struct.pack(
             '<IIIHHIIIIII', self.biSize, self.biWidth, self.biHeight,
-            self.biPlanes, self.biBitCount, self.bitCompression,
+            self.biPlanes, self.biBitCount, self.biCompression,
             self.biSizeImage, self.biXPelsPerMeter, self.biYPelsPerMeter,
             self.biClrUsed, self.biClrImportant)
 
@@ -199,27 +207,23 @@ patch: %d'''
 
 
 if __name__ == '__main__':
-    '''
-    img = Bitmap('24.bmp')
+    img = Bitmap('24_bit.bmp')
     img.parse()
     print img
     img.zoomIn(4)
     print img
-    img.dump('24_2.bmp')
-    '''
+    img.dump('24_bit_2.bmp')
 
-    '''
-    img = Bitmap('256.bmp')
+    img = Bitmap('256_color.bmp')
     img.parse()
     print img
     img.zoomIn(2)
     print img
-    img.dump('256_2.bmp')
-    '''
+    img.dump('256_color_2.bmp')
 
-    img = Bitmap('16.bmp')
+    img = Bitmap('16_color.bmp')
     img.parse()
     print img
     img.zoomIn(2)
     print img
-    img.dump('16_2.bmp')
+    img.dump('16_color_2.bmp')
